@@ -1,9 +1,9 @@
 module SolidBackup
   class Backup
-    attr_reader :name
+    attr_reader :database
 
-    def initialize(name:, destination:, interval_in_minutes:)
-      self.name = name
+    def initialize(database:, destination:, interval_in_minutes:)
+      self.database = database
       self.destination = destination
       self.interval_in_minutes = interval_in_minutes
 
@@ -22,7 +22,7 @@ module SolidBackup
     end
 
     def perform
-      ActiveSupport::Notifications.instrument("backup.solid_backup", name:) do
+      ActiveSupport::Notifications.instrument("backup.solid_backup", database:) do
         lock do
           do_perform(Time.now.utc.strftime(destination.to_s))
         end
@@ -32,13 +32,13 @@ module SolidBackup
     private
 
     attr_accessor :countdown
-    attr_writer :name
+    attr_writer :database
     attr_reader :destination, :interval_in_minutes
 
     def interval_in_minutes=(value)
-      if !value.is_a?(Integer) && value <= 0
+      if !value.is_a?(Integer) || value <= 0
         raise TypeError.new(<<~ERROR)
-          invalid backup configuration for #{name}: interval_in_minutes is set to #{interval_in_minutes.inspect}, but should be set to a positive integer
+          invalid backup configuration for #{database}: interval_in_minutes is set to #{value.inspect}, but should be set to a positive integer
         ERROR
       end
 
@@ -50,14 +50,14 @@ module SolidBackup
       directory = value.dirname
 
       if !directory.directory?
-        raise "invalid backup configuration for #{name}: destination directory #{directory} must exist"
+        raise "invalid backup configuration for #{database}: destination directory #{directory} must exist"
       end
 
       test_path = directory / "solid_backup.txt"
       begin
         test_path.write("Solid Backup Test")
-      rescue Errno::EACCESS
-        raise "invalid backup configuration for #{name}: destination directory #{directory} must be writeable"
+      rescue Errno::EACCES
+        raise "invalid backup configuration for #{database}: destination directory #{directory} must be writeable"
       ensure
         test_path.unlink
       end
@@ -74,13 +74,13 @@ module SolidBackup
     end
 
     def connection_pool
-      ActiveRecord::Base.connection_handler.establish_connection(name.to_sym)
+      ActiveRecord::Base.connection_handler.establish_connection(database.to_sym)
     end
 
     delegate :with_connection, to: :connection_pool
 
     def lock
-      path = destination.dirname / ".solid_backup.#{name}.lock"
+      path = destination.dirname / ".solid_backup.#{database}.lock"
 
       File.open(path, File::RDWR | File::CREAT) do |f|
         if f.flock(File::LOCK_EX | File::LOCK_NB)
@@ -94,7 +94,7 @@ module SolidBackup
 
       begin
         File.unlink(path)
-      rescue ERRNO::ENOENT
+      rescue Errno::ENOENT
       end
     end
   end

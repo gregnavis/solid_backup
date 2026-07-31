@@ -6,8 +6,8 @@
 # - perform - to avoid creating lock files and emitting instrumentation events
 # - destination and interval_in_minutes - to allow nil values
 class SolidBackup::Backup::None < SolidBackup::Backup
-  def initialize(name:)
-    super(name:, destination: nil, interval_in_minutes: 0)
+  def initialize(database:)
+    super(database:, destination: nil, interval_in_minutes: 0)
   end
 
   def tick

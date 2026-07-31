@@ -44,22 +44,28 @@ mode in practice:
 
 ```ruby
 SolidBackup.configure do |config|
-	# Back up the primary database using the SQLite backup API.
-  config.backup "primary",
-                SolidBackup::Backup::API,
-                destination: "storage/backups/primary_%Y%m%dT%H%M%S.sqlite3",
-                interval_in_minutes: 15, # Start the next backup 15 minutes after the previous one.
-                step: 100,               # Back up in 100-page increments.
-                wait: 0.1                # Wait 0.1 seconds if a lock interrupts a backup step.
+  config.enabled = true
 
-	# Don't back up the cache database.
-  config.backup "cache", SolidBackup::Backup::None
+  # Configure backups for all production databases. Other environments can have
+  # backups configured for them via additional config.environment blocks.
+  config.environment("production") do |production|
+    # Back up the primary database using the SQLite backup API.
+    production.backup "primary",
+                      SolidBackup::Backup::API,
+                      destination: "storage/backups/primary_%Y%m%dT%H%M%S.sqlite3",
+                      interval_in_minutes: 15, # Start the next backup 15 minutes after the previous one.
+                      step: 100,               # Back up in 100-page increments.
+                      wait: 0.1                # Wait 0.1 seconds if a lock interrupts a backup step.
 
-  # Back up the queue database using VACUUM INTO.
-  config.backup "queue",
-                SolidBackup::Backup::VacuumInto,
-                destination: "storage/backups/queue_%Y%m%dT%H%M%S.sqlite3",
-                interval_in_minutes: 60 # Start the next backup 60 minutes after the previous one.
+    # Don't back up the cache database.
+    production.backup "cache", SolidBackup::Backup::None
+
+    # Back up the queue database using VACUUM INTO.
+    production.backup "queue",
+                      SolidBackup::Backup::VacuumInto,
+                      destination: "storage/backups/queue_%Y%m%dT%H%M%S.sqlite3",
+                      interval_in_minutes: 60 # Start the next backup 60 minutes after the previous one.
+  end
 end
 ```
 

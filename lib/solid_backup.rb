@@ -3,6 +3,7 @@ require "solid_backup/backup/none"
 require "solid_backup/backup/api"
 require "solid_backup/backup/vacuum_into"
 require "solid_backup/configuration"
+require "solid_backup/configuration/environment"
 require "solid_backup/version"
 require "solid_backup/railtie"
 
@@ -18,7 +19,7 @@ module SolidBackup
     end
 
     def tick
-      configuration.algorithms.each(&:tick)
+      configuration.tick(Rails.env)
     end
 
     private

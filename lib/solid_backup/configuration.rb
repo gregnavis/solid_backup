@@ -1,20 +1,25 @@
 module SolidBackup
   class Configuration
     attr_accessor :enabled
-    attr_reader :algorithms
+    attr_reader :environments
 
     def initialize
       self.enabled = nil
-      self.algorithms = []
+      self.environments = []
     end
 
-    def backup(name, algorithm_class, **algorithm_arguments)
+    def environment(name, &)
       name = name.to_s
-      if algorithms.find { it.name == name }
-        raise ArgumentError.new("#{name} has had backups configured already")
+      if environments.any? { it.name == name }
+        raise ArgumentError.new("environment #{name} has already been configured")
       end
 
-      algorithms << algorithm_class.new(name:, **algorithm_arguments)
+      environments << SolidBackup::Configuration::Environment.new(name, &)
+    end
+
+    def tick(env_name)
+      env_name = env_name.to_s
+      environments.find { it.name == env_name }&.tick
     end
 
     def validate!
@@ -22,17 +27,7 @@ module SolidBackup
         raise TypeError.new("enabled is set to #{enabled.inspect}, but allowed values are true or false")
       end
 
-      configured_database_names = algorithms.map(&:name)
-      all_database_names = ActiveRecord::Base.configurations.configs_for(env_name: Rails.env).select do |db_config|
-        db_config.adapter == "sqlite3"
-      end.map(&:name)
-
-      if (missing_databases = all_database_names - configured_database_names).present?
-        raise "SQLite databases missing from backup configuration: #{missing_databases.join(", ")}"
-      end
-      if (unknown_databases = configured_database_names - all_database_names).present?
-        raise "unknown SQLite databases present in backup configuration: #{unknown_databases.join(", ")}"
-      end
+      environments.each(&:validate!)
     end
 
     def enabled?
@@ -45,6 +40,6 @@ module SolidBackup
 
     private
 
-    attr_writer :algorithms
+    attr_writer :environments
   end
 end

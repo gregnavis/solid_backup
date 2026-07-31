@@ -13,15 +13,15 @@ module SolidBackup
         ActiveRecord::Base.configurations.configs_for(env_name: "production").each do |db_config|
           backups << if yes?("Back up #{db_config.name} in production?")
             <<~CODE.chomp
-              config.backup #{db_config.name.inspect},
-                            SolidBackup::Backup::API,
-                            destination: "storage/backups/#{db_config.name}_%Y%m%dT%H%M%S.sqlite3",
-                            interval_in_minutes: 60,
-                            step: 100,
-                            wait: 0.1
+              production.backup #{db_config.name.inspect},
+                                SolidBackup::Backup::API,
+                                destination: "storage/backups/#{db_config.name}_%Y%m%dT%H%M%S.sqlite3",
+                                interval_in_minutes: 60,
+                                step: 100,
+                                wait: 0.1
             CODE
           else
-            "config.backup #{db_config.name.inspect}, SolidBackup::Backup::None"
+            "production.backup #{db_config.name.inspect}, SolidBackup::Backup::None"
           end
         end
 
@@ -34,7 +34,9 @@ module SolidBackup
             #
             # IMPORTANT: all databases must be explicitly configured, even if they're not
             # backed up, to avoid accidentally excluding new databases from backups.
-          #{backups.join("\n").indent(2)}
+            config.environment("production") do |production|
+          #{backups.join("\n").indent(4)}
+            end
           end
         CODE
 
