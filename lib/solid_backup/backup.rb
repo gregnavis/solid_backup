@@ -1,3 +1,5 @@
+require "active_support/core_ext/module/delegation"
+
 module SolidBackup
   class Backup
     attr_reader :database

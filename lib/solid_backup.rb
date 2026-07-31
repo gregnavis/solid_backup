@@ -1,3 +1,5 @@
+require "active_support/core_ext/module/delegation"
+
 require "solid_backup/backup"
 require "solid_backup/backup/none"
 require "solid_backup/backup/api"
