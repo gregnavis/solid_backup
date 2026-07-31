@@ -3,9 +3,10 @@ require "solid_backup"
 
 Puma::Plugin.create do
   def start(launcher)
-    return if SolidBackup.disabled?
-
     in_background do
+      next if !defined?(Rails) || !Rails.application&.initialized?
+      next if SolidBackup.disabled?
+
       loop do
         sleep(1)
         SolidBackup.tick
