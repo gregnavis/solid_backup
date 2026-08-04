@@ -23,19 +23,19 @@ module SolidBackup
       end
     end
 
-    def perform
-      ActiveSupport::Notifications.instrument("backup.solid_backup", database:) do
-        lock do
-          do_perform(Time.now.utc.strftime(destination.to_s))
-        end
-      end
-    end
-
     private
 
     attr_accessor :countdown
     attr_writer :database
     attr_reader :destination, :interval_in_minutes
+
+    def perform
+      ActiveSupport::Notifications.instrument("backup.solid_backup", database:) do
+        lock do
+          do_perform(Time.now.utc.strftime((destination / "#{database}_%Y%m%dT%H%M%S.sqlite3").to_s))
+        end
+      end
+    end
 
     def interval_in_minutes=(value)
       if !value.is_a?(Integer) || value <= 0
@@ -49,17 +49,16 @@ module SolidBackup
 
     def destination=(value)
       value = Pathname(value)
-      directory = value.dirname
 
-      if !directory.directory?
-        raise "invalid backup configuration for #{database}: destination directory #{directory} must exist"
+      if !value.directory?
+        raise "invalid backup configuration for #{database}: destination directory #{value} must exist"
       end
 
-      test_path = directory / "solid_backup.txt"
+      test_path = value / "solid_backup.txt"
       begin
         test_path.write("Solid Backup Test")
       rescue Errno::EACCES
-        raise "invalid backup configuration for #{database}: destination directory #{directory} must be writeable"
+        raise "invalid backup configuration for #{database}: destination directory #{value} must be writeable"
       ensure
         test_path.unlink
       end
@@ -82,7 +81,7 @@ module SolidBackup
     delegate :with_connection, to: :connection_pool
 
     def lock
-      path = destination.dirname / ".solid_backup.#{database}.lock"
+      path = destination / ".solid_backup.#{database}.lock"
 
       File.open(path, File::RDWR | File::CREAT) do |f|
         if f.flock(File::LOCK_EX | File::LOCK_NB)

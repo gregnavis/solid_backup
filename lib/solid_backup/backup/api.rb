@@ -13,9 +13,9 @@ class SolidBackup::Backup::API < SolidBackup::Backup
   def do_perform(backup_path)
     with_connection do |connection|
       source = connection.raw_connection
-      destination = SQLite3::Database.new(backup_path)
+      target = SQLite3::Database.new(backup_path)
 
-      backup = SQLite3::Backup.new(destination, "main", source, "main")
+      backup = SQLite3::Backup.new(target, "main", source, "main")
 
       loop do
         result = backup.step(step)
@@ -32,7 +32,7 @@ class SolidBackup::Backup::API < SolidBackup::Backup
       end
 
       backup.finish
-      destination.close
+      target.close
     end
   end
 end

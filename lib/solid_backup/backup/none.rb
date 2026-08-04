@@ -13,12 +13,12 @@ class SolidBackup::Backup::None < SolidBackup::Backup
   def tick
   end
 
-  def perform
-  end
-
   private
 
   attr_writer :destination, :interval_in_minutes
+
+  def perform
+  end
 
   def do_perform(backup_path)
   end

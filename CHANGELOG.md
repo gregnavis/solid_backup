@@ -1,5 +1,10 @@
 # Solid Backup
 
+## Next Release
+
+- `destination` is the directory where backup files will be placed, not a
+  %-encoded template.
+
 ## 0.2.2
 
 - Don't call `SolidBackup` too early to avoid errors caused by Rails not being

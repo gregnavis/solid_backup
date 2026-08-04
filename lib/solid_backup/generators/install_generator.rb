@@ -15,7 +15,7 @@ module SolidBackup
             <<~CODE.chomp
               production.backup #{db_config.name.inspect},
                                 SolidBackup::Backup::API,
-                                destination: "storage/backups/#{db_config.name}_%Y%m%dT%H%M%S.sqlite3",
+                                destination: "storage/backups",
                                 interval_in_minutes: 60,
                                 step: 100,
                                 wait: 0.1
