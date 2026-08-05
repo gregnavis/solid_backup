@@ -1,6 +1,6 @@
 # Solid Backup
 
-## Next Release
+## 0.3.0
 
 - `destination` is the directory where backup files will be placed, not a
   %-encoded template.
