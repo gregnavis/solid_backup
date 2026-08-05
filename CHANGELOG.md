@@ -4,6 +4,9 @@
 
 - `destination` is the directory where backup files will be placed, not a
   %-encoded template.
+- New `expiration:` option can be set to determine backup expiration policy;
+  currently only `SolidBackup::Expiration::Age.new(maximum: ...)` and
+  `SolidBackup::Expiration::None.new` are supported.
 
 ## 0.2.2
 

@@ -17,6 +17,7 @@ module SolidBackup
                                 SolidBackup::Backup::API,
                                 destination: "storage/backups",
                                 interval_in_minutes: 60,
+                                expiration: SolidBackup::Expiration::Age.new(maximum: 24.hours),
                                 step: 100,
                                 wait: 0.1
             CODE

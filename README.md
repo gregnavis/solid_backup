@@ -32,6 +32,8 @@ Modes other than `SolidBackup::Backup::None` take the following parameters:
                   exist and be writeable.
 - `interval_in_minutes` - the number of minutes to the beginning of the next
                           backup after the previous one finished.
+- `expiration` - backup expiration policy; expired backups are automatically
+                 removed.
 
 Additionally, `SolidBackup::Backup::API` takes the following parameters:
 
@@ -52,9 +54,18 @@ SolidBackup.configure do |config|
     production.backup "primary",
                       SolidBackup::Backup::API,
                       destination: "storage/backups",
-                      interval_in_minutes: 15, # Start the next backup 15 minutes after the previous one.
-                      step: 100,               # Back up in 100-page increments.
-                      wait: 0.1                # Wait 0.1 seconds if a lock interrupts a backup step.
+
+                      # Start the next backup 15 minutes after the previous one.
+                      interval_in_minutes: 15,
+
+                      # Back up in 100-page increments.
+                      step: 100,
+
+                      # Wait 0.1 seconds if a lock interrupts a backup step.
+                      wait: 0.1,
+
+                      # Remove backups older than 30 days.
+                      expiration: SolidBackup::Expiration::Age.new(maximum: 30.days)
 
     # Don't back up the cache database.
     production.backup "cache", SolidBackup::Backup::None
@@ -63,7 +74,12 @@ SolidBackup.configure do |config|
     production.backup "queue",
                       SolidBackup::Backup::VacuumInto,
                       destination: "storage/backups",
-                      interval_in_minutes: 60 # Start the next backup 60 minutes after the previous one.
+
+                      # Start the next backup 60 minutes after the previous one.
+                      interval_in_minutes: 60,
+
+                      # Remove backups older than 12 hours.
+                      expiration: SolidBackup::Expiration::Age.new(maximum: 12.hours)
   end
 end
 ```

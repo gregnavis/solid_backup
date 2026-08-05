@@ -4,10 +4,11 @@ module SolidBackup
   class Backup
     attr_reader :database
 
-    def initialize(database:, destination:, interval_in_minutes:)
+    def initialize(database:, destination:, interval_in_minutes:, expiration:)
       self.database = database
       self.destination = destination
       self.interval_in_minutes = interval_in_minutes
+      self.expiration = expiration
 
       reset_countdown
     end
@@ -19,21 +20,32 @@ module SolidBackup
 
       if countdown <= 0
         perform
+        remove_expired_backups
         reset_countdown
       end
     end
 
     private
 
-    attr_accessor :countdown
+    attr_accessor :countdown, :expiration
     attr_writer :database
     attr_reader :destination, :interval_in_minutes
 
     def perform
       ActiveSupport::Notifications.instrument("backup.solid_backup", database:) do
         lock do
-          do_perform(Time.now.utc.strftime((destination / "#{database}_%Y%m%dT%H%M%S.sqlite3").to_s))
+          do_perform(Time.now.utc.strftime((destination / file_name_pattern).to_s))
         end
+      end
+    end
+
+    def remove_expired_backups
+      files = destination.children.select(&:file?)
+      expiration.select_expired(files) do |pathname|
+        Time.strptime(pathname.basename.to_s, file_name_pattern)
+      rescue ArgumentError
+      end.each do |pathname|
+        pathname.unlink
       end
     end
 
@@ -76,6 +88,10 @@ module SolidBackup
 
     def connection_pool
       ActiveRecord::Base.connection_handler.establish_connection(database.to_sym)
+    end
+
+    def file_name_pattern
+      "#{database}_%Y%m%dT%H%M%S.sqlite3"
     end
 
     delegate :with_connection, to: :connection_pool
