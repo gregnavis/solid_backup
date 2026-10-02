@@ -1,6 +1,6 @@
 # Solid Backup
 
-## Next Release
+## 0.4.0
 
 - Add backup compression support via the `compressor:` option; currently
   `SolidBackup::Compressor::Gzip` is the only supported value.
