@@ -7,7 +7,7 @@
 # - destination and interval_in_minutes - to allow nil values
 class SolidBackup::Backup::None < SolidBackup::Backup
   def initialize(database:)
-    super(database:, destination: nil, interval_in_minutes: 0, expiration: nil)
+    super(database:, destination: nil, interval_in_minutes: 0, expiration: nil, compressor: nil)
   end
 
   def tick

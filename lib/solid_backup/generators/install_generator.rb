@@ -18,6 +18,7 @@ module SolidBackup
                                 destination: "storage/backups",
                                 interval_in_minutes: 60,
                                 expiration: SolidBackup::Expiration::Age.new(maximum: 24.hours),
+                                compressor: SolidBackup::Compressor::Gzip,
                                 step: 100,
                                 wait: 0.1
             CODE

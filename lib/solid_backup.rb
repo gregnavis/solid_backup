@@ -7,6 +7,7 @@ require "solid_backup/backup/vacuum_into"
 require "solid_backup/configuration"
 require "solid_backup/configuration/environment"
 require "solid_backup/expiration"
+require "solid_backup/compressor"
 require "solid_backup/version"
 require "solid_backup/railtie"
 

@@ -34,6 +34,8 @@ Modes other than `SolidBackup::Backup::None` take the following parameters:
                           backup after the previous one finished.
 - `expiration` - backup expiration policy; expired backups are automatically
                  removed.
+- `compressor` - backup compression policy; `nil` be default which turns
+                 compression off, but can be set to SolidBackup::Compressor::Gzip.
 
 Additionally, `SolidBackup::Backup::API` takes the following parameters:
 
@@ -65,7 +67,10 @@ SolidBackup.configure do |config|
                       wait: 0.1,
 
                       # Remove backups older than 30 days.
-                      expiration: SolidBackup::Expiration::Age.new(maximum: 30.days)
+                      expiration: SolidBackup::Expiration::Age.new(maximum: 30.days),
+
+                      # Compress backups using gzip.
+                      compressor: SolidBackup::Compressor::Gzip
 
     # Don't back up the cache database.
     production.backup "cache", SolidBackup::Backup::None
@@ -79,7 +84,10 @@ SolidBackup.configure do |config|
                       interval_in_minutes: 60,
 
                       # Remove backups older than 12 hours.
-                      expiration: SolidBackup::Expiration::Age.new(maximum: 12.hours)
+                      expiration: SolidBackup::Expiration::Age.new(maximum: 12.hours),
+
+                      # Don't compress backups. This is the default setting.
+                      compressor: nil
   end
 end
 ```

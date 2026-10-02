@@ -1,5 +1,10 @@
 # Solid Backup
 
+## Next Release
+
+- Add backup compression support via the `compressor:` option; currently
+  `SolidBackup::Compressor::Gzip` is the only supported value.
+
 ## 0.3.0
 
 - `destination` is the directory where backup files will be placed, not a

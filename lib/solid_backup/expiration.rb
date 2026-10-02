@@ -11,7 +11,7 @@ module SolidBackup::Expiration
     end
 
     def select_expired(pathnames)
-      threshold = maximum.ago
+      threshold = maximum.ago.utc
       pathnames.select do |pathname|
         timestamp = yield(pathname)
         timestamp && timestamp < threshold

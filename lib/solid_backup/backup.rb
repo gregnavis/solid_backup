@@ -4,11 +4,12 @@ module SolidBackup
   class Backup
     attr_reader :database
 
-    def initialize(database:, destination:, interval_in_minutes:, expiration:)
+    def initialize(database:, destination:, interval_in_minutes:, expiration:, compressor:)
       self.database = database
       self.destination = destination
       self.interval_in_minutes = interval_in_minutes
       self.expiration = expiration
+      self.compressor = compressor
 
       reset_countdown
     end
@@ -27,14 +28,20 @@ module SolidBackup
 
     private
 
-    attr_accessor :countdown, :expiration
+    attr_accessor :countdown, :expiration, :compressor
     attr_writer :database
     attr_reader :destination, :interval_in_minutes
 
     def perform
       ActiveSupport::Notifications.instrument("backup.solid_backup", database:) do
         lock do
-          do_perform(Time.now.utc.strftime((destination / file_name_pattern).to_s))
+          backup_path = Pathname(Time.now.utc.strftime((destination / file_name_pattern).to_s))
+          do_perform(backup_path)
+
+          next if compressor.nil?
+
+          compressor.compress(backup_path)
+          backup_path.unlink
         end
       end
     end
@@ -91,7 +98,7 @@ module SolidBackup
     end
 
     def file_name_pattern
-      "#{database}_%Y%m%dT%H%M%S.sqlite3"
+      "#{database}_%Y%m%dT%H%M%S%Z.sqlite3"
     end
 
     delegate :with_connection, to: :connection_pool
